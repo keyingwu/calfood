@@ -49,8 +49,8 @@ export async function POST(request: Request) {
       const cleanContent = content?.replace(/```json\n|\n```/g, "") || "{}";
       parsedContent = JSON.parse(cleanContent);
       console.log("Successfully parsed JSON:", parsedContent);
-    } catch (e) {
-      console.log("Failed to parse JSON, attempting text extraction");
+    } catch (error) {
+      console.log(`Error parsing JSON: ${error}`);
       const ingredients = extractIngredientsFromText(content || "");
       parsedContent = { ingredients };
       console.log("Extracted ingredients from text:", parsedContent);

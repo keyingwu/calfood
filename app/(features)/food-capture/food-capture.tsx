@@ -27,6 +27,7 @@ export function FoodCapture({ onImageCaptured }: { onImageCaptured: (image: Capt
         setIsCapturing(true);
       }
     } catch (error) {
+      console.error("Camera error:", error);
       toast({
         variant: "destructive",
         title: "Camera Error",

@@ -20,6 +20,7 @@ interface Ingredient {
 export function FoodCaptureContainer() {
   const [capturedImage, setCapturedImage] = useState<CapturedImage | null>(null);
   const { analyzeFood, isAnalyzing, error, result } = useFoodAnalysis();
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [editedIngredients, setEditedIngredients] = useState<Ingredient[]>([]);
 
   const handleImageCaptured = async (image: CapturedImage) => {
@@ -41,7 +42,18 @@ export function FoodCaptureContainer() {
       {capturedImage ? (
         <>
           <FoodPreview imageUrl={capturedImage.dataUrl} onRetake={handleRetake} />
-          <EditableAnalysisResults isAnalyzing={isAnalyzing} error={error} results={result} onRetry={() => analyzeFood(capturedImage.dataUrl)} onChange={handleIngredientsChange} />
+          <EditableAnalysisResults 
+            isAnalyzing={isAnalyzing} 
+            error={error} 
+            results={result ? {
+              ingredients: result.ingredients.map(ingredient => ({
+                ...ingredient,
+                caloriesPerGram: ingredient.calories / ingredient.weight
+              }))
+            } : null}
+            onRetry={() => analyzeFood(capturedImage.dataUrl)}
+            onChange={handleIngredientsChange}
+          />
         </>
       ) : (
         <FoodCapture onImageCaptured={handleImageCaptured} />
