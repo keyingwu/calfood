@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
+import Webcam from "react-webcam";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
@@ -12,9 +13,15 @@ interface CapturedImage {
 }
 
 const MAX_IMAGE_SIZE = 3 * 1024 * 1024; // 3MB
-const TARGET_IMAGE_SIZE = 1200; // Increased to 1200px for better quality
+const TARGET_IMAGE_SIZE = 1200;
 const MIN_COMPRESSION_QUALITY = 0.5;
 const MAX_COMPRESSION_QUALITY = 0.9;
+
+const videoConstraints = {
+  width: 1280,
+  height: 720,
+  facingMode: "environment",
+};
 
 async function compressImage(dataUrl: string, targetSize = MAX_IMAGE_SIZE): Promise<string> {
   return new Promise((resolve, reject) => {
@@ -80,44 +87,27 @@ async function compressImage(dataUrl: string, targetSize = MAX_IMAGE_SIZE): Prom
 
 export function FoodCapture({ onImageCaptured }: { onImageCaptured: (image: CapturedImage) => void }) {
   const [isCapturing, setIsCapturing] = useState(false);
-  const videoRef = useRef<HTMLVideoElement>(null);
+  const webcamRef = useRef<Webcam>(null);
   const { toast } = useToast();
 
-  // Handle camera capture
-  const startCamera = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { facingMode: "environment" },
-      });
-      if (videoRef.current) {
-        videoRef.current.srcObject = stream;
-        setIsCapturing(true);
-      }
-    } catch (error) {
-      console.error("Camera error:", error);
-      toast({
-        variant: "destructive",
-        title: "Camera Error",
-        description: "Unable to access camera. Please check permissions.",
-      });
-    }
+  const startCamera = () => {
+    setIsCapturing(true);
+  };
+
+  const stopCamera = () => {
+    setIsCapturing(false);
   };
 
   const captureImage = async () => {
-    if (!videoRef.current) return;
-
-    const canvas = document.createElement("canvas");
-    canvas.width = videoRef.current.videoWidth;
-    canvas.height = videoRef.current.videoHeight;
-
-    const context = canvas.getContext("2d");
-    if (!context) return;
-
-    context.drawImage(videoRef.current, 0, 0);
-    const dataUrl = canvas.toDataURL("image/jpeg");
+    if (!webcamRef.current) return;
 
     try {
-      const compressedDataUrl = await compressImage(dataUrl);
+      const imageSrc = webcamRef.current.getScreenshot();
+      if (!imageSrc) {
+        throw new Error("Failed to capture image");
+      }
+
+      const compressedDataUrl = await compressImage(imageSrc);
 
       // Convert dataUrl to File
       const blobBin = atob(compressedDataUrl.split(",")[1]);
@@ -134,22 +124,15 @@ export function FoodCapture({ onImageCaptured }: { onImageCaptured: (image: Capt
 
       stopCamera();
     } catch (error) {
-      console.error("Image compression error:", error);
+      console.error("Image capture error:", error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to process image. Please try again.",
+        description: "Failed to capture image. Please try again.",
       });
     }
   };
 
-  const stopCamera = () => {
-    const stream = videoRef.current?.srcObject as MediaStream;
-    stream?.getTracks().forEach((track) => track.stop());
-    setIsCapturing(false);
-  };
-
-  // Handle file upload
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -186,9 +169,14 @@ export function FoodCapture({ onImageCaptured }: { onImageCaptured: (image: Capt
     <Card className="p-4">
       {isCapturing ? (
         <div className="space-y-4">
-          <video ref={videoRef} autoPlay playsInline className="w-full rounded-lg" />
+          <div className="relative aspect-video">
+            <Webcam ref={webcamRef} audio={false} screenshotFormat="image/jpeg" videoConstraints={videoConstraints} className="w-full h-full rounded-lg" />
+          </div>
           <div className="flex justify-center gap-2">
-            <Button onClick={captureImage}>Capture</Button>
+            <Button onClick={captureImage}>
+              <CameraIcon className="mr-2 h-4 w-4" />
+              Capture
+            </Button>
             <Button variant="outline" onClick={stopCamera}>
               Cancel
             </Button>

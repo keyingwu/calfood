@@ -27,7 +27,7 @@ Dependencies
 
 允许用户通过设备相机或上传图片的方式获取食物照片。
 
-Next.js, React, `react-webcam` 或浏览器 MediaDevices API
+Next.js, React, `react-webcam`
 
 **2. Analyze Food using qwen**
 
