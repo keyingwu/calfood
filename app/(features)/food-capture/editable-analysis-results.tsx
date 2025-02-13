@@ -6,6 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AlertCircle } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 interface Ingredient {
   name: string;
@@ -80,6 +82,19 @@ export function EditableAnalysisResults({ isAnalyzing, error, results, onRetry, 
         <p className="text-red-500 mb-4">{error}</p>
         <Button onClick={onRetry}>Retry Analysis</Button>
       </Card>
+    );
+  }
+
+  if (results?.ingredients.length === 0) {
+    return (
+      <Alert variant="destructive">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>分析失败</AlertTitle>
+        <AlertDescription>未识别到食物，请重新拍摄或上传清晰的食物图片</AlertDescription>
+        <Button onClick={onRetry} variant="outline" className="mt-4 w-full">
+          重新分析
+        </Button>
+      </Alert>
     );
   }
 
